@@ -17,7 +17,7 @@ Design, train, and deploy an end-to-end solution to forecast drug demand 30 days
 
 ## Project Roadmap
 - [x] Repository initialization & scoping (V1)
-- [ ] Synthetic data generation script
+- [x] Synthetic data generation script
 - [ ] PostgreSQL modeling & ingestion (Docker Compose)
 - [ ] Machine Learning pipeline & SHAP explainability
 - [ ] REST API development (FastAPI)
