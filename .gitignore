@@ -1,0 +1,23 @@
+# Environnements virtuels & Conda
+.venv/
+venv/
+*.egg-info/
+
+# Cache Python
+__pycache__/
+*.py[cod]
+
+# Données locales (CSV, Parquet, bases SQLite locales)
+*.csv
+*.parquet
+*.db
+*.sqlite
+
+# Fichiers IDE & Système
+.vscode/
+.idea/
+.DS_Store
+
+# Configuration locale VS Code & Workspace
+*.code-workspace
+.vscode/
