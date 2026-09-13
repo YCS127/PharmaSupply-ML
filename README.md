@@ -1,5 +1,9 @@
 # PharmaSupply-ML
 
+![Python](https://img.shields.io/badge/python-3.11-blue.svg)
+![Docker](https://img.shields.io/badge/docker-ready-blue.svg)
+![Status](https://img.shields.io/badge/status-in--development-orange.svg)
+
 > **End-to-end ML platform for demand forecasting and stockout prevention in the pharmaceutical supply chain.**
 
 ## Business Goal
