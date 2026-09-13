@@ -15,6 +15,15 @@ Design, train, and deploy an end-to-end solution to forecast drug demand 30 days
 * **API & UI:** FastAPI, Streamlit
 * **DevOps & Cloud:** Docker, GCP Cloud Run / AWS
 
+## Prerequisites & Local Setup
+
+### WSL2 Docker Auto-Start (Windows)
+If you are working with WSL2, Docker Desktop might not be running in the background when executing commands. 
+
+1. Ensure the helper script is executable:
+   ```bash
+   chmod +x scripts/docker-wrapper.sh
+
 
 ## Project Roadmap
 - [x] Repository initialization & scoping (V1)
