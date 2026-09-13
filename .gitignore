@@ -21,3 +21,8 @@ __pycache__/
 # Configuration locale VS Code & Workspace
 *.code-workspace
 .vscode/
+
+# Configuration & Variables d'environnement sensibles
+.env
+.env.*
+!.env.example
