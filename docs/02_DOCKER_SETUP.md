@@ -1,7 +1,7 @@
 # Technical Documentation
-## Module 03: Docker setup
+## Module 02: Docker setup
 **Project:** PharmaSupply-ML  
-**File:** `docs/03_DOCKER_SETUP.md`  
+**File:** `docs/02_DOCKER_SETUP.md`  
 **Status:** Validated
 
 ---

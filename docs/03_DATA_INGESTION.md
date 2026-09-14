@@ -1,7 +1,7 @@
 # Technical Documentation
-## Module 04: Data Ingestion
+## Module 03: Data Ingestion
 **Project:** PharmaSupply-ML  
-**File:** `docs/04_DATA_INGESTION.md`  
+**File:** `docs/03_DATA_INGESTION.md`  
 **Status:** Validated
 
 ---
