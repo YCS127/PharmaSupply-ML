@@ -79,7 +79,7 @@ If you are working with WSL2, Docker Desktop might not be running in the backgro
 ## Project Roadmap
 - [x] Repository initialization & scoping (V1)
 - [x] Synthetic data generation script
-- [ ] PostgreSQL modeling & ingestion (Docker Compose)
+- [x] PostgreSQL modeling & ingestion (Docker Compose)
 - [ ] Support real-world data ingestion connector (optional / plug-and-play setup)
 - [ ] Machine Learning pipeline & SHAP explainability
 - [ ] REST API development (FastAPI)
