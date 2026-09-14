@@ -1,8 +1,11 @@
-# Project Dependencies & Technical Stack / Dépendances du Projet
-
-This document tracks the Python libraries and tools used in **PharmaSupply-ML**.
+# Technical Documentation
+## Module 01: Dependencies
+**Project:** PharmaSupply-ML  
+**File:** `docs/01_DEPENDENCIES.md`  
+**Status:** Validated
 
 ---
+
 
 <details>
 <summary>🇫🇷 <b>Version Française (Cliquez pour dérouler)</b></summary>  

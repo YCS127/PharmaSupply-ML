@@ -27,7 +27,7 @@ dependencies:
   - libntlm=1.8
   - libopenblas=0.3.34
   - libpq=18.6
-  - libpython=3.11.16
+  - libpython=3.14.7
   - libsqlite=3.53.4
   - libstdcxx=16.2.0
   - libuuid=2.42.3
@@ -54,3 +54,6 @@ dependencies:
   - tzdata=2026c
   - wheel=0.48.0
   - zstd=1.5.7
+  - pip:
+      - psycopg2-binary==2.9.13
+      - python-dotenv==1.2.3

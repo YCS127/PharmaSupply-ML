@@ -1,3 +1,13 @@
+# Technical Documentation
+## Module 00: Project init
+**Project:** PharmaSupply-ML  
+**File:** `docs/00_PROJECT_INIT.md`  
+**Status:** Validated
+
+---
+
+
+
 # Universal MLOps Project Initialization Checklist & Guide / Checklist & Guide Universel d'Initialisation de Projet MLOps
 
 <details>

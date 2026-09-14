@@ -1,8 +1,11 @@
-# Database Infrastructure & Docker Containerization / Infrastructure Base de Données & Conteneurisation Docker
-
-Operating Procedure for Docker & PostgreSQL setup in the MLOps pipeline.
+# Technical Documentation
+## Module 03: Docker setup
+**Project:** PharmaSupply-ML  
+**File:** `docs/03_DOCKER_SETUP.md`  
+**Status:** Validated
 
 ---
+
 
 <details>
 <summary>🇫🇷 <b>Version Française (Cliquez pour dérouler)</b></summary>
