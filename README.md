@@ -39,7 +39,8 @@ Si vous travaillez avec WSL2, Docker Desktop peut ne pas être exécuté en arri
 ### Feuille de Route (Roadmap)
 - [x] Initialisation du dépôt et cadrage du projet (V1)
 - [x] Script de génération de données synthétiques
-- [ ] Modélisation & Ingestion PostgreSQL (Docker Compose)
+- [x] Modélisation & Ingestion PostgreSQL (`src/ingestion.py`, Docker Compose)
+- [x] Pipeline de validation et de contrôle qualité des données (`src/validation.py`)
 - [ ] Connecteur d'ingestion de données réelles (optionnel / prêt à l'emploi)
 - [ ] Pipeline de Machine Learning & Explicabilité SHAP
 - [ ] Développement de l'API REST (FastAPI)
@@ -79,7 +80,8 @@ If you are working with WSL2, Docker Desktop might not be running in the backgro
 ## Project Roadmap
 - [x] Repository initialization & scoping (V1)
 - [x] Synthetic data generation script
-- [x] PostgreSQL modeling & ingestion (Docker Compose)
+- [x] PostgreSQL modeling & ingestion (`src/ingestion.py`, Docker Compose)
+- [x] Automated data quality & validation pipeline (`src/validation.py`)
 - [ ] Support real-world data ingestion connector (optional / plug-and-play setup)
 - [ ] Machine Learning pipeline & SHAP explainability
 - [ ] REST API development (FastAPI)
