@@ -174,15 +174,15 @@ streamlit run src/streamlit.py
 
 #
 
-
-
-
 </details>
 
 ---
 
 ### [EN] English Version
 > 
+
+## Project Philosophy
+
 This repository addresses a dual engineering challenge:
 
 * **A Production-Ready Core MLOps Architecture:** Practical implementation of ML lifecycle fundamentals (idempotent ingestion, strict data validation, API serving, monitoring) with an extension roadmap toward Generative AI (RAG / LLM in V2).
@@ -192,7 +192,7 @@ This repository addresses a dual engineering challenge:
 
 ## Architecture Overview
 
-``` text
+```text
 +-----------------------+     +------------------------+     +------------------------+
 |  Synthetic Data Gen   | --> | PostgreSQL (Docker)    | --> | Data Validation        |
 |  (Raw CSV Generation) |     | (Idempotent Ingestion) |     | (Automated Assertions) |
@@ -211,54 +211,133 @@ This repository addresses a dual engineering challenge:
 | (Automated Alternative Drug Recommendations during Active Stockouts)                |
 +-------------------------------------------------------------------------------------+
 ```
----
-
-## 💡 MLOps Paradigm: From Lab to Production
-
-This project bridges the gap between exploratory data science and industrial software engineering. Each module highlights key engineering decisions:
-
-### 1. Persistent Data Layer vs. Raw CSV
-* **Lab Approach:** Reading directly from a static `.csv` using `pd.read_csv()`. It lacks concurrency, schema constraints, and real-world parity.
-* **Production Approach:** Ingesting raw data into **PostgreSQL via Docker** (`src/ingestion.py`). This guarantees Dev/Prod parity, transactional integrity, and idempotency.
-
-### 2. Automated Data Quality vs. Manual Inspection
-* **Lab Approach:** Checking `df.isna()` interactively in a Jupyter Notebook cell.
-* **Production Approach:** Executing strict automated schema assertions (`src/validation.py`) within the pipeline to halt processing instantly if corrupted or negative values enter the system.
 
 ---
 
-## 🚀 Quickstart
+## Development Environment
 
-Follow these steps to run the ingestion and data quality validation locally:
+The project is developed under **WSL2 (Ubuntu)** using a **Bash / Zsh** shell environment paired with **Miniconda**.
+
+**Why this dev architecture choice?**
+* **Dev/Prod Parity (Native Linux):** Executing code within a Linux subsystem (WSL2) guarantees strict parity with Docker containers and production deployment servers, preventing Windows-specific compatibility issues (file paths, C/C++ dependencies).
+* **Strict Isolation with Conda:** Using `miniconda` to precisely manage Python and complex C/C++ dependencies (essential for libraries like XGBoost, LightGBM, or PyTorch) without polluting the system environment.
+* **Shell Productivity:** The Bash/Zsh ecosystem enables seamless automation of CLI scripts, Docker commands, and CI/CD pipelines.
+
+---
+
+## Data: Synthetic Generation & Real-World Readiness
+
+Due to strict confidentiality and pharmaceutical data regulations (GDPR / HIPAA), this project relies on **automated synthetic data generation** (`src/generate_data.py`).
+
+However, the architecture strictly respects the **decoupling** principle:
+* **Realistic Simulation:** The generator reproduces real Supply Chain behaviors (pathology seasonality, lead times, stockout risks).
+* **"Plug & Play" Real Connector:** The ingestion pipeline is designed generically. A simple environment variable switch (`DATA_SOURCE=production` or via a configuration parameter) allows plugging the pipeline into a real database or actual files without modifying the core application code.
+
+---
+
+## MLOps Paradigm: Encapsulating Lab into Production
+
+### To clarify the project structure, two key concepts are distinguished:
+> * **Lab (Core Business Logic):** The analytical and experimental workspace where statistical processing, business cleaning, feature engineering, and modeling are developed.
+> * **Prod (Ops Wrapper):** The automated software infrastructure surrounding the business code to guarantee idempotency, persistence, schema validation, serving, and extensibility.
+>
+> The objective of this project is to **encapsulate the Lab into Prod** without altering its analytical logic.
+
+#### Data Layer: Securing Access
+* **Lab:** Data extraction and querying scripts for analysis.
+* **Prod:** Ingestion module (`src/ingestion.py`) and PostgreSQL database (Docker) guaranteeing idempotency, persistence, and concurrent access management.
+
+#### Quality Control & Preparation: From Technical Validation to Business Cleaning
+* **Lab:** Analytical processing (missing value imputation, business logic corrections, feature engineering).
+* **Prod:** Automated validation wrapper (`src/validation.py`) placed upstream to check schema compliance (data types, outliers) and ensure that Lab code always runs on valid data.
+
+#### Execution & Serving: From Local Prediction to API
+* **Lab:** Ad-hoc execution of `model.predict()` inside a notebook cell.
+* **Prod:** Exposing predictions via a FastAPI REST API, containerized and ready to be consumed by a Streamlit dashboard or third-party systems.
+
+#### GenAI Extension (V2): RAG & Agent Integration
+* **Lab:** Ad-hoc LLM querying or isolated text analysis scripts.
+* **Prod:** Autonomous RAG module interconnected with stockout predictions to automatically recommend therapeutic alternatives.
+
+---
+
+## Quickstart
+
+> ⚠️ **Structural Prerequisite:** The steps below rely on scripts located in the `src/` directory. Ensure that the files corresponding to each module (`generate_data.py`, `ingestion.py`, `validation.py`, `train.py`, etc.) have been created in your environment before running the commands.
+
+1. **Clone the repository and navigate to the project directory**
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/<votre-user>/PharmaSupply-ML.git
+git clone https://github.com/votre-user/PharmaSupply-ML.git
 cd PharmaSupply-ML
+```
 
-# 2. Start PostgreSQL container
+2. **Create and activate the Conda virtual environment**
+
+```bash
+# Installed dependencies: SQLAlchemy, psycopg2, pandas, pydantic, scikit-learn, xgboost, fastapi, streamlit, etc.
+conda create -n pharmasupply python -y
+conda activate pharmasupply
+pip install -r requirements.txt
+```
+
+3. **Start the infrastructure (PostgreSQL Database via Docker)**
+
+```bash
 docker compose up -d
+```
 
-# 3. Run data quality validation pipeline
+4. **Generate synthetic data and run ingestion**
+
+```bash
+python src/generate_data.py
+python src/ingestion.py
+```
+
+5. **Run the data validation pipeline**
+
+```bash
 python src/validation.py
+```
+
+6. **Train the forecasting model**
+
+```bash
+python src/train.py
+```
+
+7. **Launch the FastAPI REST API service**
+
+```bash
+uvicorn src.api:app --reload
+```
+
+8. **Launch the Dashboard service (new terminal window)**
+
+```bash
+streamlit run src/streamlit.py
 ```
 
 ---
 
-## 🗺️ Project Roadmap & Evolution
+## 🗺️ Project Roadmap & Future Developments
 
-### V1 — Core MLOps Forecasting Engine (Current Focus)
-- [x] Repository initialization & scoping
-- [x] Synthetic data generation script
-- [x] PostgreSQL modeling & idempotent ingestion (`src/ingestion.py`, Docker Compose)
-- [x] Automated data quality & validation pipeline (`src/validation.py`)
-- [ ] Feature engineering module (lags, temporal features, rolling means)
-- [ ] Machine Learning pipeline & SHAP explainability
-- [ ] REST API development (FastAPI)
-- [ ] Interactive dashboard (Streamlit)
-- [ ] Containerization & Cloud Deployment
+### V1 — Demand Forecasting MLOps Engine (Core Infrastructure)
 
-### V2 — Generative AI & Supply Chain Intelligence (Planned)
-- [ ] **RAG / LLM Integration:** Automated alternative drug recommendations during active stockouts.
-- [ ] **Data Drift & Monitoring:** Continuous monitoring of feature drift and model performance decay in production.
-- [ ] **Automated Stock Redistribution:** Optimization algorithm for inter-pharmacy inventory balancing.
+* [x] **Initialization & Scoping:** Repository structure, Conda environment, and Docker Compose setup (PostgreSQL).
+* [x] **Synthetic Generation & Idempotent Ingestion:**
+  * Synthetic dataset generation script (`src/generate_data.py`).
+  * Persistence and structuring in PostgreSQL (`src/ingestion.py`).
+* [x] **Ops Guardrails & Quality:** Automated technical validation pipeline (`src/validation.py`).
+* [ ] **ML Pipeline & Feature Engineering:** Time-series feature generation (lags, rolling statistics) and XGBoost model training (`src/train.py`).
+* [ ] **Explainability & Monitoring:** SHAP integration and Data Drift detection across batch distributions.
+* [ ] **REST API Serving:** Real-time prediction serving via FastAPI (`src/api.py`).
+* [ ] **Decision Dashboard:** Interactive Supply Chain user interface built with Streamlit (`src/dashboard.py`).
+
+---
+
+### V2 — Generative AI & Advanced Supply Chain Optimization (Outlook)
+
+* [ ] **RAG / LLM Copilot:** Generative AI agent for automated alternative drug recommendations during active stockouts.
+* [ ] **Automated Inventory Redistribution:** Constrained optimization algorithm for balancing inventory across pharmacies.
+* [ ] **Cloud Deployment & CI/CD:** GitHub Actions pipeline and containerized infrastructure hosting.
