@@ -4,24 +4,24 @@ CONTEXT & PURPOSE:
 ------------------
 Due to data privacy restrictions and the lack of immediate access to real-world
 pharmaceutical sales databases during the project setup phase, this script generates
-a realistic synthetic dataset.
+a realistic 3-year synthetic dataset (1,095 days).
 
-It mimics supply chain dynamics (seasonality, stockouts, automatic replenishment,
-and supplier lead times) to establish end-to-end MLOps pipelines. This module is
-designed to be easily replaced by a real-world data ingestion connector once production
-data becomes available.
+It mimics supply chain dynamics:
+1. Multi-year seasonality (winter flu spikes, spring allergies) and market growth trend.
+2. Censored demand during active stockouts (sales_volume != target_demand).
+3. Variable supplier lead times with probabilistic delivery shocks.
 
 DATA STRUCTURE:
 ---------------
-- Row Count: 3,650 rows (365 days x 10 pharmaceutical products)
+- Row Count: 10,950 rows (1,095 days x 10 pharmaceutical products)
 - Features Generated:
     1. date (str): YYYY-MM-DD timestamp.
     2. product_id (str): Unique product code (e.g., MED_001).
-    3. target_demand (int): True daily customer demand (accounting for winter seasonality & weekends).
+    3. target_demand (int): True daily customer demand.
     4. sales_volume (int): Actual sales fulfilled based on available stock.
-    5. stock_on_hand (int): Daily remaining inventory after sales & replenishment.
+    5. stock_on_hand (int): Daily remaining inventory.
     6. is_stockout (int): Binary flag (1 if stock < target demand, else 0).
-    7. supplier_lead_time (int): Simulated delivery delay in days (probabilistic choice: 2, 3, 5, or 7 days).
+    7. supplier_lead_time (int): Simulated delivery delay in days.
 """
 
 import logging
@@ -39,9 +39,9 @@ logging.basicConfig(
 
 
 def build_pharma_dataset(
-    days: int = 365, num_products: int = 10, seed: int = 42
+    days: int = 1095, num_products: int = 10, seed: int = 42
 ) -> pd.DataFrame:
-    """Generate historical daily demand and stock levels for supply chain."""
+    """Generate 3 years of historical daily demand and stock levels."""
     np.random.seed(seed)
     end_date = datetime.now()
     start_date = end_date - timedelta(days=days)
@@ -56,34 +56,55 @@ def build_pharma_dataset(
     rows = []
 
     for product in products:
-        base_demand = np.random.randint(40, 180)
-        current_stock = np.random.randint(600, 1800)
+        base_demand = np.random.randint(50, 150)
+        current_stock = np.random.randint(800, 2000)
 
-        for current_date in dates:
-            # Winter seasonal spike (higher pharmaceutical demand)
+        for day_idx, current_date in enumerate(dates):
+            # 1. Trend & Seasonality
+            annual_trend = 1.0 + (
+                0.04 * (day_idx / 365)
+            )  # +4% growth per year
+
             is_winter = current_date.month in [11, 12, 1, 2]
-            seasonality = 1.25 if is_winter else 1.0
+            is_spring = current_date.month in [3, 4, 5]
+
+            seasonality = (
+                1.30
+                if is_winter
+                else (1.15 if is_spring else 1.0)
+            )
 
             # Weekend effect (lower order volumes)
             is_weekend = current_date.weekday() >= 5
-            weekend_scale = 0.55 if is_weekend else 1.0
+            weekend_scale = 0.50 if is_weekend else 1.0
 
-            # Compute final daily demand
+            # Compute true target demand
             raw_demand = (
-                np.random.normal(base_demand, 12)
+                np.random.normal(base_demand, 10)
                 * seasonality
                 * weekend_scale
+                * annual_trend
             )
             demand = max(0, int(raw_demand))
 
-            # Check stockout status and fulfill sales
+            # 2. Stockout check & Censored sales
             is_stockout = int(current_stock < demand)
             fulfilled_sales = min(current_stock, demand)
             current_stock -= fulfilled_sales
 
+            # 3. Variable supplier lead time & Supply shocks
+            lead_time = int(
+                np.random.choice(
+                    [2, 3, 5, 8, 12],
+                    p=[0.50, 0.30, 0.10, 0.07, 0.03],
+                )
+            )
+
             # Automatic replenishment trigger
-            if current_stock < 250:
-                current_stock += np.random.randint(400, 900)
+            if current_stock < 300:
+                current_stock += np.random.randint(
+                    500, 1200
+                )
 
             rows.append(
                 {
@@ -95,12 +116,7 @@ def build_pharma_dataset(
                     "sales_volume": fulfilled_sales,
                     "stock_on_hand": current_stock,
                     "is_stockout": is_stockout,
-                    "supplier_lead_time": int(
-                        np.random.choice(
-                            [2, 3, 5, 7],
-                            p=[0.5, 0.3, 0.15, 0.05],
-                        )
-                    ),
+                    "supplier_lead_time": lead_time,
                 }
             )
 
@@ -109,17 +125,16 @@ def build_pharma_dataset(
 
 if __name__ == "__main__":
     logging.info(
-        "Generating synthetic pharmaceutical dataset..."
+        "Generating 3-year synthetic pharmaceutical dataset..."
     )
     df_pharma = build_pharma_dataset()
 
-    # Define path to the root data/ directory
     output_dir = Path("data")
-    output_dir.mkdir(
-        parents=True, exist_ok=True
-    )  # Create 'data/' directory if it doesn't exist
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    output_file = output_dir / "pharmaceutical_demand.csv"
+    output_file = (
+        output_dir / "pharmaceutical_demand_row.csv"
+    )
     df_pharma.to_csv(output_file, index=False)
 
     logging.info(

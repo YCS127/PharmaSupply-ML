@@ -119,7 +119,7 @@ if __name__ == "__main__":
 
     # Define path to raw CSV file inside root data/ directory
     raw_data_path = (
-        ROOT_DIR / "data" / "pharmaceutical_demand.csv"
+        ROOT_DIR / "data" / "pharmaceutical_demand_row.csv"
     )
 
     # Execute ingestion into staging table
