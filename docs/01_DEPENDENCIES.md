@@ -1,7 +1,7 @@
 # Technical Documentation
-## Module 01: Dependencies
+## Module 01: Dependencies (environment.yml | requirements.txt)  
 **Project:** PharmaSupply-ML  
-**File:** `docs/01_DEPENDENCIES.md`  
+**File:** `docs/01_DEPENDENCIES.md`    
 **Status:** Validated
 
 ---
