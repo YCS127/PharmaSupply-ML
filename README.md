@@ -159,7 +159,7 @@ streamlit run src/streamlit.py
   * Script de génération du jeu de données synthétique (`src/generate_data.py`).
   * Persistance et structuration dans la base PostgreSQL (`src/ingestion.py`).
 * [x] **Garde-fou Ops & Qualité :** Pipeline de validation technique automatique (`src/validation.py`).
-* [ ] **Pipeline ML & Feature Engineering :** Génération de variables temporelles/lags et entraînement XGBoost (`src/train.py`).
+* [x] **Pipeline ML & Feature Engineering :** Génération de variables temporelles/lags et entraînement XGBoost (`src/train.py`).
 * [ ] **Explicabilité & Monitoring :** Intégration SHAP et détection du *Data Drift* sur la distribution des lots.
 * [ ] **Serving REST API :** Exposition des prédictions en temps réel via FastAPI (`src/api.py`).
 * [ ] **Interface Décisionnelle :** Tableau de bord interactif pour la Supply Chain (`src/dashboard.py`).
@@ -329,7 +329,7 @@ streamlit run src/streamlit.py
   * Synthetic dataset generation script (`src/generate_data.py`).
   * Persistence and structuring in PostgreSQL (`src/ingestion.py`).
 * [x] **Ops Guardrails & Quality:** Automated technical validation pipeline (`src/validation.py`).
-* [ ] **ML Pipeline & Feature Engineering:** Time-series feature generation (lags, rolling statistics) and XGBoost model training (`src/train.py`).
+* [x] **ML Pipeline & Feature Engineering:** Time-series feature generation (lags, rolling statistics) and XGBoost model training (`src/train.py`).
 * [ ] **Explainability & Monitoring:** SHAP integration and Data Drift detection across batch distributions.
 * [ ] **REST API Serving:** Real-time prediction serving via FastAPI (`src/api.py`).
 * [ ] **Decision Dashboard:** Interactive Supply Chain user interface built with Streamlit (`src/dashboard.py`).
