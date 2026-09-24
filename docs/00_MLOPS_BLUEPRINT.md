@@ -1,0 +1,171 @@
+# Technical Documentation
+## Blueprint: From ML Notebook to MLOps  
+**Project:** PharmaSupply-ML (Standard MLOps Framework)  
+**File:** `docs/00_MLOPS_BLUEPRINT.md`  
+**Status:** Reference Architecture  
+
+---
+
+<details>
+<summary>🇫🇷 <b>Version Française (Cliquez pour dérouler)</b></summary>  
+
+
+#### *Ce document sert de trame de référence pour structurer, industrialiser et déployer un projet de Machine Learning selon les standards MLOps. Il est applicable aussi bien pour refactoriser un notebook exploratoire existant que pour démarrer un projet à partir d'une page blanche*
+
+---
+
+## Matrice d'adaptation du projet
+
+| Mode de départ | Objectif principal de la démarche |
+| :--- | :--- |
+| **Option A : Refactoring (depuis un Notebook)** | Découper le code monolithique, extraire la logique métier dans des modules `.py`, et sécuriser l'environnement. |
+| **Option B : Greenfield (depuis zéro)** | Initialiser directement l'architecture logicielle, le conteneur de données et le pipeline de bout en bout. |
+
+---
+
+## Les 7 Phases du Framework MLOps
+
+### 1. Initialization & Scoping
+* **Objectif :** Poser les bases de l'infrastructure logicielle, du contrôle de version et de l'environnement de développement.
+* **Livrables :**
+  * Structure standard de dépôt Git (`src/`, `data/`, `models/`, `reports/`, `notebooks/`, `docs/`).
+  * Fichier de configuration d'environnement déclaratif (`environment.yml` ou `requirements.txt`).
+  * Fichier `.gitignore` adapté aux données brutes, identifiants et artefacts de modèles.
+
+---
+
+### 2. Data Infrastructure & Ingestion
+* **Objectif :** Garantir un accès fiable, reproductible et idempotent aux données sources.
+* **Livrables :**
+  * **Option Standard (Entreprise) :** Service de base de données conteneurisé (ex: `docker-compose.yml` avec PostgreSQL, MySQL, etc.).
+  * **Option Légère (POC / Fichiers) :** Module d'accès aux fichiers plats (`.csv`, `.parquet`) sur un stockage local ou Cloud (S3, GCS).
+  * Module d'ingestion automatisé (`src/ingestion.py` ou `src/data_loader.py`).
+
+---
+
+### 3. Ops Guardrails, Data Quality & Cleaning
+* **Objectif :** Valider l'intégrité technique des données brutes et effectuer un nettoyage de surface avant tout traitement analytique.
+* **Livrables :**
+  * Pipeline de validation et nettoyage automatisé (`src/validation.py` ou `src/cleaning.py`).
+  * Contrôle des schémas et types de données.
+  * Gestion des doublons, suppression/imputation d'urgence des valeurs manquantes et filtrage des valeurs aberrantes ou incohérentes métier.
+
+---
+
+### 4. ML Pipeline, Preprocessing & Feature Engineering
+* **Objectif :** Transformer les données propres en représentations matricielles exploitables par l'algorithme, puis entraîner et sérialiser le modèle de manière reproductible.
+* **Livrables :**
+  * Module de pré-traitement spécifique au modèle (`src/preprocessing.py`) : normalisation/scaling, encodage des variables catégorielles, imputation avancée.
+  * Module de création de variables (*Feature Engineering*) : calcul de retards (*lags*), statistiques glissantes, ratios métier.
+  * Script d'entraînement et d'évaluation (`src/train.py`).
+  * Sauvegarde sérialisée des artefacts du modèle (`.pkl`, `.json`, `.onnx`) et des pré-traitements (*scalers*, *encoders*).
+
+---
+
+### 5. Explainability & Monitoring
+* **Objectif :** Rendre les décisions du modèle intelligibles pour les équipes métiers et surveiller l'évolution des données dans le temps.
+* **Livrables :**
+  * Module d'explicabilité (`src/explainability.py`) intégrant les valeurs **SHAP** (explications globales et locales).
+  * Script de détection de dérive des données (*Data Drift*) comparant le jeu de données de référence avec les nouvelles données de production.
+
+---
+
+### 6. REST API Serving
+* **Objectif :** Exposer le modèle sous forme de service web haute performance pour permettre les prédictions en temps réel ou en batch.
+* **Livrables :**
+  * Application API (`src/api.py`) développée avec **FastAPI**.
+  * Contrats de validation stricte des données d'entrée/sortie via **Pydantic**.
+  * Encapsulation optionnelle de l'application et de son environnement dans une image **Docker**.
+
+---
+
+### 7. Decision Dashboard & User Interface
+* **Objectif :** Offrir une interface métier aux utilisateurs finaux pour restituer les prédictions, piloter la prise de décision et visualiser l'état du système.
+* **Livrables :**
+  * Application d'interface utilisateur (`src/dashboard.py`) développée avec **Streamlit**.
+  * Tableaux de bord décisionnels intégrant la restitution des prédictions, les graphiques d'explicabilité SHAP et les alertes de dérive des données.
+EOF
+
+</details>
+
+---
+
+### [EN] English Version
+
+
+---
+
+#### *This document serves as the master reference blueprint to structure, industrialize, and deploy a Machine Learning project according to MLOps standards. It applies equally to refactoring an existing exploratory notebook or starting a new project from scratch*
+
+---
+
+## Project Adaptation Matrix
+
+| Starting Point | Core Objective |
+| :--- | :--- |
+| **Option A: Refactoring (From a Notebook)** | Break down monolithic code, extract business logic into `.py` modules, and secure the environment. |
+| **Option B: Greenfield (From Scratch)** | Initialize software architecture, data containers, and the end-to-end pipeline directly. |
+
+---
+
+## The 7 MLOps Framework Phases
+
+### 1. Initialization & Scoping
+* **Objective:** Establish core software infrastructure, version control, and development environment.
+* **Deliverables:**
+  * Standard Git repository structure (`src/`, `data/`, `models/`, `reports/`, `notebooks/`, `docs/`).
+  * Declarative environment configuration file (`environment.yml` or `requirements.txt`).
+  * Custom `.gitignore` file tracking raw data, credentials, and model artifacts safely.
+
+---
+
+### 2. Data Infrastructure & Ingestion
+* **Objective:** Ensure reliable, reproducible, and idempotent access to source data.
+* **Deliverables:**
+  * **Standard Option (Enterprise):** Containerized database service (e.g., `docker-compose.yml` with PostgreSQL, MySQL, etc.).
+  * **Light Option (POC / Files):** Data access module for flat files (`.csv`, `.parquet`) on local or Cloud storage (S3, GCS).
+  * Automated ingestion module (`src/ingestion.py` or `src/data_loader.py`).
+
+---
+
+### 3. Ops Guardrails, Data Quality & Cleaning
+* **Objective:** Validate raw data integrity and perform surface cleaning before downstream processing.
+* **Deliverables:**
+  * Automated validation and cleaning pipeline (`src/validation.py` or `src/cleaning.py`).
+  * Schema enforcement and data type validation.
+  * Duplicate management, missing value strategy, and domain-specific outlier filtering.
+
+---
+
+### 4. ML Pipeline, Preprocessing & Feature Engineering
+* **Objective:** Transform clean data into matrix representations, train the model, and serialize artifacts reproducibly.
+* **Deliverables:**
+  * Model-specific preprocessing module (`src/preprocessing.py`): scaling, categorical encoding, advanced imputation.
+  * Feature engineering module: lag calculations, rolling statistics, business ratios.
+  * Training and evaluation script (`src/train.py`).
+  * Serialized model artifacts (`.pkl`, `.json`, `.onnx`) and preprocessing objects (scalers, encoders).
+
+---
+
+### 5. Explainability & Monitoring
+* **Objective:** Provide interpretable insights for business stakeholders and monitor data distribution over time.
+* **Deliverables:**
+  * Explainability module (`src/explainability.py`) integrating **SHAP** values (global and local interpretations).
+  * Data drift detection script comparing baseline datasets against incoming production data.
+
+---
+
+### 6. REST API Serving
+* **Objective:** Expose the trained model via a high-performance web service for real-time or batch inference.
+* **Deliverables:**
+  * API application (`src/api.py`) powered by **FastAPI**.
+  * Strict input/output payload data validation contracts using **Pydantic**.
+  * Optional application containerization using **Docker**.
+
+---
+
+### 7. Decision Dashboard & User Interface
+* **Objective:** Deliver a business interface for end-users to serve predictions, drive decision-making, and monitor system health.
+* **Deliverables:**
+  * User interface application (`src/dashboard.py`) built with **Streamlit**.
+  * Executive dashboards featuring prediction displays, SHAP explainability plots, and data drift alerts.
