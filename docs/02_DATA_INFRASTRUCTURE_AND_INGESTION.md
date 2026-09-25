@@ -1,16 +1,16 @@
-# Technical Documentation
-## Phase 2: Data Infrastructure & Ingestion
-**Project:** PharmaSupply-ML
-**Framework:** Standard MLOps Blueprint
-**File:** `docs/02_DATA_INFRASTRUCTURE_AND_INGESTION.md`
-**Status:** Validated
+# Technical Documentation  
+## Phase 2: Data Infrastructure & Ingestion  
+**Project:** PharmaSupply-ML  
+**Framework:** Standard MLOps Blueprint  
+**File:** `docs/02_DATA_INFRASTRUCTURE_AND_INGESTION.md`  
+**Status:** Validated  
 
 ---
 
 <details>
 <summary>🇫🇷 <b>Version Française (Cliquez pour dérouler)</b></summary>
 
-### *Ce document détaille l'infrastructure de stockage des données conteneurisée sous Docker (PostgreSQL) ainsi que le pipeline d'ingestion automatisé (`src/ingestion.py`).*
+### *Ce document détaille l'infrastructure de stockage des données conteneurisée sous Docker (PostgreSQL), la définition explicite du schéma DDL (`sql/schema.sql`) ainsi que le pipeline d'ingestion automatisé (`src/ingestion.py`).*
 
 ---
 
@@ -20,20 +20,22 @@ L'objectif de cette étape est d'isoler l'infrastructure de stockage des donnée
 
 ~~~~text
 PharmaSupply-ML/
-├── .env                        # Credentials PostgreSQL (non versionné)
-├── .env.example                # Gabarit des variables d'environnement
-├── docker-compose.yml          # Services PostgreSQL & volumes
+├── .env                          # Credentials PostgreSQL (non versionné)
+├── .env.example                  # Gabarit des variables d'environnement
+├── docker-compose.yml            # Services PostgreSQL & volumes
+├── sql/
+│   └── schema.sql                # Schéma DDL officiel et indexation
 ├── data/
-│   └── pharmaceutical_demand.csv # Jeu de données brut (3 650 lignes)
+│   └── pharmaceutical_demand.csv   # Jeu de données brut (10 950 lignes)
 ├── src/
-│   └── ingestion.py            # Pipeline automatisé d'ingestion
+│   └── ingestion.py              # Pipeline automatisé d'ingestion
 └── docs/
     └── 02_DATA_INFRASTRUCTURE_AND_INGESTION.md
 ~~~~
 
 ---
 
-## 2. Infrastructure Conteneurisée (Docker Compose)
+## 2. Infrastructure Conteneurisée & Schéma DDL Explicite
 
 ### 2.1. Fichier `docker-compose.yml`
 La base de données PostgreSQL 16 (image Alpine ultra-légère) est configurée avec persistance des données sur un volume dédié :
@@ -67,7 +69,16 @@ volumes:
     driver: local
 ~~~~
 
-### 2.2. Commandes de Gestion du Conteneur
+### 2.2. Gestion du Schéma SQL (`sql/schema.sql`)
+Pour respecter les normes de production et MLOps, la création de la table `raw_pharmaceutical_demand` est gérée de manière **explicite** via un fichier SQL DDL. Cela remplace la génération dynamique automatique de Pandas pour offrir un meilleur contrôle sur les typages de données et pour ajouter un **index composite de performance** (`idx_pharma_date_product`).
+
+**Application du schéma DDL dans la base :**
+~~~~bash
+docker compose cp sql/schema.sql postgres:/tmp/schema.sql
+docker compose exec postgres psql -U ycs_admin -d pharmasupply_db -f /tmp/schema.sql
+~~~~
+
+### 2.3. Commandes de Gestion du Conteneur
 Toutes les commandes s'exécutent depuis la racine du projet :
 
 | Action | Commande | Description |
@@ -78,18 +89,41 @@ Toutes les commandes s'exécutent depuis la racine du projet :
 | **Arrêt Sécurisé** | `docker compose stop` | Arrête le conteneur en préservant les données dans le volume. |
 | **Purge Complète** | `docker compose down -v` | Supprime le conteneur et purge le volume de données. |
 
+### 2.4. Guide d'Interrogation de la Base de Données (CLI)
+
+Pour explorer ou déboguer les données directement depuis le terminal via `psql` :
+
+#### A. Session interactive (Ligne de commande SQL)
+~~~~bash
+# Ouvrir le terminal interactif PostgreSQL
+docker compose exec postgres psql -U ycs_admin -d pharmasupply_db
+~~~~
+*Une fois dans le shell `psql` :*
+* `\dt` : Lister toutes les tables.
+* `\d raw_pharmaceutical_demand` : Afficher la structure détaillée d'une table (colonnes, types, index).
+* `\q` : Quitter le shell `psql`.
+
+#### B. Requêtes rapides ponctuelles (Command-line one-liners)
+~~~~bash
+# Compter le nombre de lignes
+docker compose exec postgres psql -U ycs_admin -d pharmasupply_db -c "SELECT COUNT(*) FROM raw_pharmaceutical_demand;"
+
+# Inspecter les 5 premières lignes
+docker compose exec postgres psql -U ycs_admin -d pharmasupply_db -c "SELECT * FROM raw_pharmaceutical_demand LIMIT 5;"
+
+# Obtenir la liste des produits uniques et leur volume d'enregistrements
+docker compose exec postgres psql -U ycs_admin -d pharmasupply_db -c "SELECT product_id, COUNT(*) FROM raw_pharmaceutical_demand GROUP BY product_id;"
+~~~~
+
 ---
 
 ## 3. Pipeline d'Ingestion (`src/ingestion.py`)
 
-Le script `src/ingestion.py` extrait les données brutes du fichier CSV local (`data/pharmaceutical_demand.csv`) et les charge dans la table de staging `raw_pharmaceutical_demand`.
+Le script `src/ingestion.py` extrait les données brutes du fichier CSV local (`data/pharmaceutical_demand.csv`) et les charge dans la table de staging `raw_pharmaceutical_demand` pré-structurée par le DDL.
 
-### 3.1. Structure du Code
-Le module est découpé en trois blocs distincts :
-
-1. **Imports & Configuration :** Chargement dynamique des identifiants depuis `.env` et gestion du démarrage de Docker via un sous-processus interactif (`zsh -i -c`) sous WSL2.
-2. **Fonction d'Ingestion :** Parsing optimisé du fichier CSV via `pandas` et écriture en base de données via `SQLAlchemy` (`df.to_sql()`).
-3. **Bloc d'Exécution (`main`) :** Validation de l'état du conteneur, résolution des chemins relatifs et exécution idempotente de l'ingestion (`if_exists="replace"`).
+### 3.1. Évolution MLOps : Du Dynamique vers l'Explicite
+* **Ancienne approche (Pandas `to_sql`) :** Pandas créait dynamiquement la table au premier lancement, sans typage strict ni indexation.
+* **Nouvelle approche (DDL Explicite) :** La table et ses index sont initialisés via `sql/schema.sql`. Le pipeline Python insère ensuite les enregistrements dans la structure existante via `if_exists="append"`, garantissant l'intégrité du schéma et des performances optimales sur les séries temporelles.
 
 ---
 
@@ -97,13 +131,12 @@ Le module est découpé en trois blocs distincts :
 
 ### 4.1. Lancement du Pipeline
 ~~~~bash
-conda activate pharmasupply-ml
 python src/ingestion.py
 ~~~~
 
 ### 4.2. Vérification de la Base de Données
 ~~~~bash
-docker exec -it pharmasupply-db psql -U mlops_user -d pharmasupply_db -c "SELECT COUNT(*) FROM raw_pharmaceutical_demand;"
+docker compose exec postgres psql -U ycs_admin -d pharmasupply_db -c "SELECT COUNT(*) FROM raw_pharmaceutical_demand;"
 ~~~~
 
 </details>
@@ -112,7 +145,7 @@ docker exec -it pharmasupply-db psql -U mlops_user -d pharmasupply_db -c "SELECT
 
 ### [EN] English Version
 
-### *This document details the containerized data storage infrastructure using Docker (PostgreSQL) and the automated data ingestion pipeline (`src/ingestion.py`).*
+### *This document details the containerized data storage infrastructure using Docker (PostgreSQL), explicit DDL schema management (`sql/schema.sql`), and the automated data ingestion pipeline (`src/ingestion.py`).*
 
 ---
 
@@ -122,20 +155,22 @@ The primary goal of this phase is to isolate the data storage layer to guarantee
 
 ~~~~text
 PharmaSupply-ML/
-├── .env                        # PostgreSQL credentials (ignored by Git)
-├── .env.example                # Environment variable template
-├── docker-compose.yml          # PostgreSQL services & persistent volumes
+├── .env                          # PostgreSQL credentials (ignored by Git)
+├── .env.example                  # Environment variable template
+├── docker-compose.yml            # PostgreSQL services & persistent volumes
+├── sql/
+│   └── schema.sql                # Official DDL schema and performance indexing
 ├── data/
-│   └── pharmaceutical_demand.csv # Raw dataset (3,650 rows)
+│   └── pharmaceutical_demand.csv   # Raw dataset (10,950 rows)
 ├── src/
-│   └── ingestion.py            # Automated ingestion pipeline
+│   └── ingestion.py              # Automated ingestion pipeline
 └── docs/
     └── 02_DATA_INFRASTRUCTURE_AND_INGESTION.md
 ~~~~
 
 ---
 
-## 2. Containerized Infrastructure (Docker Compose)
+## 2. Containerized Infrastructure & Explicit DDL Schema
 
 ### 2.1. `docker-compose.yml` File
 The PostgreSQL 16 database (lightweight Alpine image) is configured with volume persistence:
@@ -169,7 +204,16 @@ volumes:
     driver: local
 ~~~~
 
-### 2.2. Container Management Commands
+### 2.2. SQL Schema Management (`sql/schema.sql`)
+To adhere to production and MLOps best practices, table creation (`raw_pharmaceutical_demand`) is **explicitly** defined in a DDL script. This replaces Pandas' implicit table generation to ensure strict column types and to introduce a **composite performance index** (`idx_pharma_date_product`).
+
+**Applying DDL schema to database:**
+~~~~bash
+docker compose cp sql/schema.sql postgres:/tmp/schema.sql
+docker compose exec postgres psql -U ycs_admin -d pharmasupply_db -f /tmp/schema.sql
+~~~~
+
+### 2.3. Container Management Commands
 All commands should be executed from the project root:
 
 | Action | Command | Description |
@@ -180,18 +224,41 @@ All commands should be executed from the project root:
 | **Stop (Safe)** | `docker compose stop` | Stops container while preserving data in the volume. |
 | **Full Cleanup** | `docker compose down -v` | Removes container and **purges the data volume**. |
 
+### 2.4. Database Querying Guide (CLI)
+
+To inspect or debug data directly from your terminal using `psql`:
+
+#### A. Interactive Session (SQL Shell)
+~~~~bash
+# Connect to interactive PostgreSQL shell
+docker compose exec postgres psql -U ycs_admin -d pharmasupply_db
+~~~~
+*Common `psql` meta-commands:*
+* `\dt`: List all tables in current database.
+* `\d raw_pharmaceutical_demand`: Display detailed table schema (columns, types, indexes).
+* `\q`: Exit `psql` shell.
+
+#### B. Quick One-Line Queries
+~~~~bash
+# Row count check
+docker compose exec postgres psql -U ycs_admin -d pharmasupply_db -c "SELECT COUNT(*) FROM raw_pharmaceutical_demand;"
+
+# Inspect first 5 records
+docker compose exec postgres psql -U ycs_admin -d pharmasupply_db -c "SELECT * FROM raw_pharmaceutical_demand LIMIT 5;"
+
+# List unique products with record count
+docker compose exec postgres psql -U ycs_admin -d pharmasupply_db -c "SELECT product_id, COUNT(*) FROM raw_pharmaceutical_demand GROUP BY product_id;"
+~~~~
+
 ---
 
 ## 3. Ingestion Pipeline (`src/ingestion.py`)
 
-The `src/ingestion.py` script extracts raw data from the local CSV file (`data/pharmaceutical_demand.csv`) and loads it into the `raw_pharmaceutical_demand` staging table.
+The `src/ingestion.py` script extracts raw data from the local CSV file (`data/pharmaceutical_demand.csv`) and loads it into the `raw_pharmaceutical_demand` staging table pre-structured by DDL.
 
-### 3.1. Code Architecture
-The module is divided into three distinct sections:
-
-1. **Imports & Configuration:** Dynamic credential parsing from `.env` and automatic container activation via interactive shell (`zsh -i -c`) in WSL2.
-2. **Ingestion Function:** Optimized CSV parsing using `pandas` and database writing using `SQLAlchemy` (`df.to_sql()`).
-3. **Execution Block (`main`):** Container health assertion, path resolution, and idempotent execution (`if_exists="replace"`).
+### 3.1. MLOps Transition: From Dynamic to Explicit
+* **Legacy Approach (Pandas `to_sql`):** Pandas dynamically created the table on execution without explicit indexing or strict typing.
+* **Modern Approach (Explicit DDL):** The table and indices are initialized via `sql/schema.sql`. The Python script appends records (`if_exists="append"`) into the defined structure, ensuring schema integrity and optimal time-series query performance.
 
 ---
 
@@ -199,11 +266,10 @@ The module is divided into three distinct sections:
 
 ### 4.1. Run Pipeline
 ~~~~bash
-conda activate pharmasupply-ml
 python src/ingestion.py
 ~~~~
 
 ### 4.2. Query Staging Table
 ~~~~bash
-docker exec -it pharmasupply-db psql -U mlops_user -d pharmasupply_db -c "SELECT COUNT(*) FROM raw_pharmaceutical_demand;"
+docker compose exec postgres psql -U ycs_admin -d pharmasupply_db -c "SELECT COUNT(*) FROM raw_pharmaceutical_demand;"
 ~~~~
